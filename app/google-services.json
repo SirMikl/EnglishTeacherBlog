@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "628022371698",
+    "firebase_url": "https://englishteacherblog-7c14b.firebaseio.com",
+    "project_id": "englishteacherblog-7c14b",
+    "storage_bucket": "englishteacherblog-7c14b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:628022371698:android:cd8b40de2e027481a4e9eb",
+        "android_client_info": {
+          "package_name": "com.example.englishteacherblog"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "628022371698-n6u0g89homdmv66k7pcarnp4vcu4lujg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.englishteacherblog",
+            "certificate_hash": "59c26175307cc2c651eda248b611ff3515056487"
+          }
+        },
+        {
+          "client_id": "628022371698-kdmr1fpe0bn9ipda2qvdeu3hg2jcjane.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKg6msuuDTQrEfdPs4AfZsZnHpeNAz4c4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "628022371698-kdmr1fpe0bn9ipda2qvdeu3hg2jcjane.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
