@@ -1,13 +1,18 @@
 package com.example.englishteacherblog;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -16,13 +21,26 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.List;
 
 public class AddPostActivity extends AppCompatActivity {
@@ -32,17 +50,28 @@ public class AddPostActivity extends AppCompatActivity {
     Uri image_uri = null;
     public static final int GALLERY_IMAGE_CODE = 100;
     public static final int CAMERA_IMAGE_CODE = 200;
+    ProgressDialog pd;
+    FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_post);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setTitle("Add Post");
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         permission();
         title_blog = findViewById(R.id.title_blog);
         description_blog=findViewById(R.id.desciption_blog);
         upload = findViewById(R.id.uploadBtn);
         blog_image = findViewById(R.id.blog_image);
-        
+
+        pd = new ProgressDialog(this);
+        auth = FirebaseAuth.getInstance();
+
         blog_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,8 +96,63 @@ public class AddPostActivity extends AppCompatActivity {
     }
 
     private void uploadData(String title, String description) {
+        pd.setMessage("Publishing post");
+        pd.show();
         final String timeStamp = String.valueOf(System.currentTimeMillis());
         String filepath = "Posts/"+"post_"+timeStamp;
+        if(blog_image.getDrawable()!=null){
+            Bitmap bitmap = ((BitmapDrawable)blog_image.getDrawable()).getBitmap();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] data = baos.toByteArray();
+            StorageReference ref = FirebaseStorage.getInstance().getReference().child(filepath);
+            ref.putBytes(data)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Task<Uri> uriTask = taskSnapshot.getStorage().getDownloadUrl();
+                            while (!uriTask.isSuccessful());
+                                String downloadUri = uriTask.getResult().toString();
+                                if (uriTask.isSuccessful()){
+                                    FirebaseUser user = auth.getCurrentUser();
+                                    HashMap<String, Object> hashMap = new HashMap<>();
+                                    hashMap.put("uid", user.getUid());
+                                    hashMap.put("uEmail", user.getEmail());
+                                    hashMap.put("pId", timeStamp);
+                                    hashMap.put("pTitle", title);
+                                    hashMap.put("pImage", downloadUri);
+                                    hashMap.put("pDescription", description);
+                                    hashMap.put("pTime", timeStamp);
+                                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Posts");
+                                    ref.child(timeStamp).setValue(hashMap)
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void aVoid) {
+                                                    pd.dismiss();
+                                                    Toast.makeText(AddPostActivity.this, "Post published", Toast.LENGTH_SHORT).show();
+                                                    title_blog.setText("");
+                                                    description_blog.setText("");
+                                                    blog_image.setImageURI(null);
+                                                    image_uri = null;
+                                                    startActivity(new Intent(AddPostActivity.this, MainActivity.class));
+                                                }
+                                            }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            pd.dismiss();
+                                            Toast.makeText(AddPostActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(AddPostActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                    pd.dismiss();
+                }
+            });
+        }
     }
 
     private void imagePickDialog() {
