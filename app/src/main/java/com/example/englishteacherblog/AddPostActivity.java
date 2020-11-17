@@ -1,5 +1,6 @@
 package com.example.englishteacherblog;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -47,6 +49,26 @@ public class AddPostActivity extends AppCompatActivity {
                 imagePickDialog();
             }
         });
+
+        upload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String title = title_blog.getText().toString();
+                String description = description_blog.getText().toString();
+                if (TextUtils.isEmpty(title)){
+                    title_blog.setError("Title is required");
+                } else if (TextUtils.isEmpty(description)){
+                    description_blog.setError("Description is required");
+                } else {
+                    uploadData(title, description);
+                }
+            }
+        });
+    }
+
+    private void uploadData(String title, String description) {
+        final String timeStamp = String.valueOf(System.currentTimeMillis());
+        String filepath = "Posts/"+"post_"+timeStamp;
     }
 
     private void imagePickDialog() {
@@ -57,10 +79,10 @@ public class AddPostActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (which==0){
-                    galleryPick();
+                    cameraPick();
                 }
                 if (which==1){
-                    cameraPick();
+                    galleryPick();
                 }
             }
         });
@@ -72,6 +94,9 @@ public class AddPostActivity extends AppCompatActivity {
         contentValues.put(MediaStore.Images.Media.TITLE, "Temp Pick");
         contentValues.put(MediaStore.Images.Media.TITLE, "Temp desc");
         image_uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, image_uri);
+        startActivityForResult(intent, CAMERA_IMAGE_CODE);
     }
 
     private void galleryPick() {
@@ -96,5 +121,20 @@ public class AddPostActivity extends AppCompatActivity {
 
             }
         }).check();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode==RESULT_OK){
+            if (requestCode==GALLERY_IMAGE_CODE){
+                image_uri = data.getData();
+                blog_image.setImageURI(image_uri);
+            }
+            if(requestCode==CAMERA_IMAGE_CODE){
+                //image_uri = data.getData();
+                blog_image.setImageURI(image_uri);
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
