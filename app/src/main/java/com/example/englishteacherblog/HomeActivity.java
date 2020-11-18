@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.englishteacherblog.Adapter.PostAdapter;
 import com.example.englishteacherblog.Model.PostModel;
@@ -48,12 +49,18 @@ public class HomeActivity extends AppCompatActivity {
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-
+                postModelList.clear();
+                for (DataSnapshot ds: snapshot.getChildren()){
+                    PostModel postModel = ds.getValue(PostModel.class);
+                    postModelList.add(postModel);
+                    postAdapter = new PostAdapter(HomeActivity.this, postModelList);
+                    recyclerView.setAdapter(postAdapter);
+                }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                Toast.makeText(HomeActivity.this, ""+error, Toast.LENGTH_SHORT).show();
             }
         });
     }
