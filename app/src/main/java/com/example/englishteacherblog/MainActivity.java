@@ -40,6 +40,13 @@ public class MainActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         auth = FirebaseAuth.getInstance();
 
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, ForgotPasswordActivity.class));
+            }
+        });
+
         needAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
